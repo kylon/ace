@@ -1,0 +1,54 @@
+; L05.6
+; Scrivere un programma in stile RISC che calcoli l'espressione
+; RISPOSTA = A * B + C * D.
+
+_A		 DCD		1
+_B		 DCD		2
+_C		 DCD		3
+_D		 DCD		4
+RISPOSTA DCD		0
+
+	ADR	R1, _A	; puntatore ad A
+	LDR	R1,[R1]	; dato A
+	ADR	R2, _B	; puntatore a B
+	LDR	R2,[R2]	; dato B
+	ADR	R3, _C	; puntatore a C
+	LDR	R3,[R3]	; dato C
+	ADR	R4, _D	; puntatore a D
+	LDR	R4,[R4]	; dato D
+
+	MOV	R10,#0	; numero di moltiplicazioni calcolate
+	MOV	R8,R1	; fattore X=A per molt. XY
+	MOV	R9,R2	; fattore	Y=B per molt. XY
+	B before	; all'algoritmo
+after1:
+	MOV	R5, R6	; R5 = AB (accumulato temp. su R6)
+	MOV	R8,R3	; fattore X=C per molt. XY
+	MOV	R9,R4	; fattore	Y=D per molt. XY
+	B before	; jump all'algoritmo
+after2:
+	CMP	R10,#2			; se non ho ancora calcolato la seconda molt.
+	BLT	after1			; se R10 = 2 allora ho appena finito solo la prima
+	ADD	R9,R5,R6		; R5 = AB, R6 = CD => R9 = AB + CD
+	ADR	R11,RISPOSTA	; puntatore a RISPSOTA
+	STR	R9,[R11]		; store di R9 su RISPOSTA
+	END					; end of the main subroutine
+before:
+	MOV	R6, #0	; azzero R6 accum. per il prodotto temp. XY
+	CMP	R8,R9
+	BLT	min1	; se X < Y => ADD Y (X volte)
+	B min2		; altrimenti ADD X (Y volte)
+min1:
+	MOV	R7,R9	; R7 valore (Y) da addiz. X volte	(R8 già pronto: B, B-1, ...)
+	B mult		; ora moltiplichiamo...
+min2:
+	MOV	R7,R8  ; R7 valore (X) da addiz. Y volte
+	MOV	R8,R9  ; R9 contatore (A, A-1, ...)
+mult:
+	ADD	R10,R10,#1	; ho calcolato un'altra moltiplicazione
+mult1:
+	ADD	R6, R6, R7	; somma
+	SUB	R8, R8, #1	; decerementa contatore
+	CMP	R8,#0		; cont > 0 => continua
+	BGT	mult1
+	B after2
